@@ -1,17 +1,36 @@
-CREATE OR REPLACE PROCEDURE critica-mov(mes text, ano text)
+CREATE TYPE type_critica_mov AS (
+	NumConta varchar,
+	NSU int,
+	Dig varchar,
+);
+
+CREATE OR REPLACE FUNCTION critica-mov(mes text, ano text) RETURNS SETOF type_critica_mov
 LANGUAGE plpgsql
 AS $$ 
+DECLARE 
+	dados_linha type_critica_mov;
+	erro-gerarDig varchar := 'Erro no digito';
+	erro-conta varchar := 'Conta não cadastrada na tabela contas';
+	erro-tipo varchar := 'Conta do tipo Sintética';
+	conta-sintetica varchar := 'S';
 BEGIN 
-	FOR linha in 
-		SELECT * FROM MovDebCred 
-		WHERE Data::text LIKE ano||mes||'%'
+	FOR dados_linha in SELECT * FROM MovDebCred WHERE Data::text LIKE ano||mes||'%'
 	LOOP
+		-- Verificando se o digito é correto
 		IF gerarDigito(linha.NumConta) != linha.Dig THEN 
-			RAISE NOTICE 'Digito incorreto em relação a conta';
+			RETURN NEXT dados_linha.NumConta, dados_linha.NSU , dados_linha.Dig;
+			RETURN NEXT erro-gerarDig;
+
+		-- Verificando se a conta existe na tabela contas
 		ELSIF linha.NumConta NOT IN (SELECT NumConta FROM Contas) THEN  
-			RAISE NOTICE 'Conta não cadastrada na tabela Contas';
-		ELSE 
-			RAISE NOTICE 'Tudo bem';
+			RETURN NEXT dados_linha.NumConta, dados_linha.NSU , dados_linha.Dig;
+			RETURN NEXT erro-conta;
+
+		-- Verificando se é uma conta tipo Sintética
+		ELSEIF conta-sintetica IN (SELECT Tipo FROM Contas)
+			RETURN NEXT dados_linha.NumConta, dados_linha.NSU , dados_linha.Dig;
+			RETURN NEXT erro-tipo;
+			
 		END IF;
 	END LOOP;
 END$$;
