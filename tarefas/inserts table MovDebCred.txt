@@ -1,0 +1,43 @@
+INSERT INTO public.movdebcred(
+	numconta, dig, data, debcred, valor)
+	VALUES ('11010011011', '1', '2019-05-18', 'C', '500');
+
+INSERT INTO public.movdebcred(
+	numconta, dig, data, debcred, valor)
+	VALUES ('11010011011', '1', '2019-05-20', 'D', 250);
+
+INSERT INTO public.movdebcred(
+	numconta, dig, data, debcred, valor)
+	VALUES ('11010011011', '1', '2019-05-30', 'D', 40);
+
+
+-- OUTRA CONTA 
+
+
+INSERT INTO public.movdebcred(
+	numconta, dig, data, debcred, valor)
+	VALUES ('11010011001', '2', '2019-06-10', 'C', 1000);
+
+INSERT INTO public.movdebcred(
+	numconta, dig, data, debcred, valor)
+	VALUES ('11010011001', '2', '2019-06-20', 'C', 600);
+
+INSERT INTO public.movdebcred(
+	numconta, dig, data, debcred, valor)
+	VALUES ('11010011001', '2', '2019-06-25', 'D', 450);
+
+
+-- OUTRA CONTA 
+
+
+INSERT INTO public.movdebcred(
+	numconta, dig, data, debcred, valor)
+	VALUES ('11010011111', '3', '2019-06-24', 'C', 450);
+	
+INSERT INTO public.movdebcred(
+	numconta, dig, data, debcred, valor)
+	VALUES ('11010011111', '3', '2019-06-26', 'C', 1500);
+	
+INSERT INTO public.movdebcred(
+	numconta, dig, data, debcred, valor)
+	VALUES ('11010011111', '3', '2019-06-30', 'D', 1000);
