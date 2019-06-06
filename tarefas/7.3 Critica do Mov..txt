@@ -1,38 +1,36 @@
-CREATE TYPE type_critica_mov AS (
-	NumConta varchar,
-	NSU int,
-	Dig varchar,
-);
+CREATE TYPE c_mov AS (
+	numconta char(11),
+	dig char(1),
+	erros text[]
+)
 
-CREATE OR REPLACE FUNCTION critica-mov(mes text, ano text) RETURNS SETOF type_critica_mov
-LANGUAGE plpgsql
-AS $$ 
+CREATE OR REPLACE FUNCTION critica_mov(mes text, ano text)
+	RETURNS SETOF c_mov
+AS $$
 DECLARE 
-	dados_linha type_critica_mov;
-	erro-gerarDig varchar := 'Erro no digito';
-	erro-conta varchar := 'Conta não cadastrada na tabela contas';
-	erro-tipo varchar := 'Conta do tipo Sintética';
-	conta-sintetica varchar := 'S';
+	linha record;
+	erros text[];
 BEGIN 
-	FOR dados_linha in SELECT * FROM MovDebCred WHERE Data::text LIKE ano||mes||'%'
+	FOR linha in SELECT Distinct NumConta, Dig FROM MovDebCred WHERE Data::text LIKE ano||'-'||mes||'%'
 	LOOP
-		-- Verificando se o digito é correto
-		IF gerarDigito(linha.NumConta) != linha.Dig THEN 
-			RETURN NEXT dados_linha.NumConta, dados_linha.NSU , dados_linha.Dig;
-			RETURN NEXT erro-gerarDig;
-
-		-- Verificando se a conta existe na tabela contas
-		ELSIF linha.NumConta NOT IN (SELECT NumConta FROM Contas) THEN  
-			RETURN NEXT dados_linha.NumConta, dados_linha.NSU , dados_linha.Dig;
-			RETURN NEXT erro-conta;
-
-		-- Verificando se é uma conta tipo Sintética
-		ELSEIF conta-sintetica IN (SELECT Tipo FROM Contas)
-			RETURN NEXT dados_linha.NumConta, dados_linha.NSU , dados_linha.Dig;
-			RETURN NEXT erro-tipo;
-			
+		IF linha.NumConta NOT IN (SELECT NumConta FROM Contas) THEN  
+			erros := array_append(erros, 'Conta não cadastrada');
+			IF (gerarDigito(linha.NumConta) <> linha.dig) THEN
+				erros := array_append(erros, 'Dígito errado');
+			END IF;
+			RETURN NEXT (linha.NumConta, linha.dig, erros);
+		ELSE
+			IF (gerarDigito(linha.NumConta) <> linha.dig) THEN
+				erros := array_append(erros, 'Dígito errado');
+			END IF;
+			IF ('A' NOT LIKE (SELECT c.Dig FROM Contas c WHERE c.NumConta = linha.NumConta)) THEN
+				erros := array_append(erros, 'Conta sintética');
+			END IF;
 		END IF;
+		erros := '{}';
 	END LOOP;
-END$$;
+END; $$
+LANGUAGE plpgsql;
 
-CALL critica-mov()
+SELECT * From movdebcred
+SELECT critica_mov('06', '2019')
