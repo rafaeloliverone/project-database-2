@@ -1,0 +1,48 @@
+CREATE OR REPLACE FUNCTION gerarDigito(conta char(11))
+RETURNS char(1)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+	digitofinal char(1);
+	aux int;
+	digito int := 0;												  
+BEGIN
+	FOR i IN 1..11 LOOP
+		aux := cast(substring(conta from i for 1) AS int);
+		CASE i
+			WHEN 1 THEN
+				aux := aux*2;
+			WHEN 2 THEN
+				aux := aux*7;
+			WHEN 3 THEN
+				aux := aux*6;
+			WHEN 4 THEN
+				aux := aux*5;
+			WHEN 5 THEN
+				aux := aux*4;
+			WHEN 6 THEN
+				aux := aux*3;
+			WHEN 7 THEN
+				aux := aux*2;
+			WHEN 8 THEN
+				aux := aux*7;
+			WHEN 9 THEN
+				aux := aux*6;
+			WHEN 10 THEN
+				aux := aux*5;
+			WHEN 11 THEN
+				aux := aux*4;											 
+		END CASE;
+		digito := digito + aux;											 										  
+	END LOOP;
+	digito := digito % 11;
+	digito := 11 - digito;									 
+	IF digito = 10 THEN
+		digitofinal := '0';
+	ELSIF digito = 11 THEN
+		digitofinal := '&';
+	ELSE
+		digitofinal := cast(digito as char(1));				  
+	END IF;											 											  											  
+	RETURN digitofinal;											  
+END $$;
