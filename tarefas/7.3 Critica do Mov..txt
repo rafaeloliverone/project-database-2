@@ -1,0 +1,19 @@
+CREATE OR REPLACE PROCEDURE critica-mov(mes text, ano text)
+LANGUAGE plpgsql
+AS $$ 
+BEGIN 
+	FOR linha in 
+		SELECT * FROM MovDebCred 
+		WHERE Data::text LIKE ano||mes||'%'
+	LOOP
+		IF gerarDigito(linha.NumConta) != linha.Dig THEN 
+			RAISE NOTICE 'Digito incorreto em relação a conta';
+		ELSIF linha.NumConta NOT IN (SELECT NumConta FROM Contas) THEN  
+			RAISE NOTICE 'Conta não cadastrada na tabela Contas';
+		ELSE 
+			RAISE NOTICE 'Tudo bem';
+		END IF;
+	END LOOP;
+END$$;
+
+CALL critica-mov()
