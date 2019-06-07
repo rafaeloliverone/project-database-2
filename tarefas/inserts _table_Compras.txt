@@ -1,0 +1,13 @@
+INSERT INTO public.contas(
+	numconta, dig, nome, tipo, ativa)
+	VALUES ('11010011111','6', 'rafael_olivera', 'A', 'S');
+
+
+INSERT INTO public.contas(
+	numconta, dig, nome, tipo, ativa)
+	VALUES ('11010011001','6', 'lucas_salles', 'A', 'S');
+
+INSERT INTO public.contas(
+	numconta, dig, nome, tipo, ativa)
+	VALUES ('70119939401','9', 'maria_da_silva', 'S', 'N');
+

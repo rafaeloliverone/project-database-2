@@ -23,14 +23,15 @@ BEGIN
 			IF (gerarDigito(linha.NumConta) <> linha.dig) THEN
 				erros := array_append(erros, 'Dígito errado');
 			END IF;
-			IF ('A' NOT LIKE (SELECT c.Dig FROM Contas c WHERE c.NumConta = linha.NumConta)) THEN
+			IF ('S' LIKE (SELECT c.Tipo FROM Contas c WHERE c.NumConta = linha.NumConta)) THEN
 				erros := array_append(erros, 'Conta sintética');
 			END IF;
+			RETURN NEXT (linha.NumConta, linha.Dig, erros);
 		END IF;
 		erros := '{}';
 	END LOOP;
 END; $$
 LANGUAGE plpgsql;
 
-SELECT * From movdebcred
+
 SELECT critica_mov('06', '2019')
