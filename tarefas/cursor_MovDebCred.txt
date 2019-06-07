@@ -1,0 +1,62 @@
+DO $$
+DECLARE
+	cursorMovDebCred NO SCROLL CURSOR (mes text, ano text)
+	FOR SELECT NumConta, DebCred, Valor FROM MovDebCred
+		WHERE data::text LIKE ano || '-' || mes|| '%' 
+		ORDER BY NumConta;
+	rec RECORD;
+	account text := null;
+	somaCred int := 0;
+	somaDeb int := 0;
+	total int := 0;
+BEGIN
+	OPEN cursorMovDebCred('06','2019');
+	LOOP
+		FETCH cursorMovDebCred INTO rec;
+		
+		IF (account is null) THEN
+			account := rec.NumConta;
+			IF (rec.Debcred <> 'C') THEN
+				somaDeb := somaDeb + rec.Valor;
+				total := total + rec.Valor;
+			ELSE 
+				somaCred := somaCred + rec.Valor;
+				total := total + rec.Valor;
+			END IF;
+				
+		ELSE	
+			
+			IF (account = rec.NumConta) THEN
+				IF (rec.Debcred <> 'C') THEN
+					somaDeb := somaDeb + rec.Valor;
+					total := total + rec.Valor;
+				ELSE 
+					somaCred := somaCred + rec.Valor;
+					total := total + rec.Valor;
+				END IF;
+			
+			ELSIF (rec.NumConta is null) THEN 
+				RAISE NOTICE '(%) % || % || % ||', account, somaCred, somaDeb, total;
+			
+			ELSE 
+				RAISE NOTICE '(%) % || % || % ||', account, somaCred, somaDeb, total;
+				somaCred := 0;
+				somaDeb := 0;
+				total := 0;
+				account := rec.NumConta;
+				IF (rec.Debcred <> 'C') THEN
+					somaDeb := somaDeb + rec.Valor;
+					total := total + rec.Valor;
+				ELSE 
+					somaCred := somaCred + rec.Valor;
+					total := total + rec.Valor;
+				END IF;
+				
+			END IF;
+		END IF;
+		
+	EXIT WHEN NOT FOUND ;
+	END LOOP;
+	CLOSE cursorMovDebCred;
+END$$;
+
