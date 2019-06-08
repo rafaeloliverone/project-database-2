@@ -1,0 +1,25 @@
+CREATE OR REPLACE PROCEDURE insertDebCred(mes text, ano text)
+AS $$
+DECLARE
+	cursorDebCred NO SCROLL CURSOR
+	FOR SELECT * FROM sumarizadaMovDebCred(mes,ano);
+	rec RECORD;
+BEGIN 
+	OPEN cursorDebCred;
+		LOOP
+			FETCH cursorDebCred INTO rec;
+			EXIT WHEN NOT FOUND;
+				IF EXISTS (SELECT NumConta FROM Contas WHERE NumConta = rec.NumConta) THEN 
+					INSERT INTO public.debcred(numconta, mesano, credito, debito)
+					VALUES (rec.NumConta, rec.mesano, rec.credito, rec.debito);
+				ELSE 
+					
+				END IF;
+				
+-- 			RAISE NOTICE '(%)|| % || % || %', rec.NumConta,  rec.mesano,  rec.credito,  rec.debito;
+		END LOOP;
+	CLOSE cursorDebCred;
+END;$$
+LANGUAGE plpgsql;
+
+CALL insertDebCred('06','2019');
