@@ -9,14 +9,18 @@ BEGIN
 		LOOP
 			FETCH cursorDebCred INTO rec;
 			EXIT WHEN NOT FOUND;
-				IF EXISTS (SELECT NumConta FROM Contas WHERE NumConta = rec.NumConta) THEN 
-					INSERT INTO public.debcred(numconta, mesano, credito, debito)
-					VALUES (rec.NumConta, rec.mesano, rec.credito, rec.debito);
+				IF rec.NumConta IN (SELECT NumConta FROM Contas) THEN
+					IF rec.NumConta IN (SELECT NumConta FROM DebCred) THEN
+						IF mesano da conta já existe ...
+						raise notice 'faltando fazer update';
+					ELSE 
+						INSERT INTO public.debcred(numconta, mesano, credito, debito)
+						VALUES (rec.NumConta, rec.mesano, rec.credito, rec.debito);
+					END IF;
 				ELSE 
-					
+					RAISE NOTICE 'Conta não cadastrada na tabela contas';
 				END IF;
 				
--- 			RAISE NOTICE '(%)|| % || % || %', rec.NumConta,  rec.mesano,  rec.credito,  rec.debito;
 		END LOOP;
 	CLOSE cursorDebCred;
 END;$$
