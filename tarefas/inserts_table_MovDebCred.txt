@@ -17,7 +17,6 @@ INSERT INTO public.movdebcred(
 INSERT INTO public.movdebcred(
 	numconta, dig, data, debcred, valor)
 	VALUES ('11010011001', '2', '2019-06-10', 'C', 1000);
-
 INSERT INTO public.movdebcred(
 	numconta, dig, data, debcred, valor)
 	VALUES ('11010011001', '2', '2019-06-20', 'C', 600);
@@ -28,8 +27,6 @@ INSERT INTO public.movdebcred(
 
 
 -- OUTRA CONTA 
-
-
 INSERT INTO public.movdebcred(
 	numconta, dig, data, debcred, valor)
 	VALUES ('11010011111', '3', '2019-06-24', 'C', 450);
@@ -42,15 +39,22 @@ INSERT INTO public.movdebcred(
 	numconta, dig, data, debcred, valor)
 	VALUES ('11010011111', '3', '2019-06-30', 'D', 1000);
 
-
 -- OUTRA CONTA 
-
 INSERT INTO public.movdebcred(
 	numconta, dig, data, debcred, valor)
 	VALUES ('70119939401', '2', '2019-06-04', 'C', '8000');
 
 -- OUTRA CONTA
-
 INSERT INTO public.movdebcred(
 	numconta, dig, data, debcred, valor)
 	VALUES ('30145578911', '9', '2019-06-22', 'D', '160');
+
+-- OUTRA CONTA
+INSERT INTO public.movdebcred(
+	numconta, dig, data, debcred, valor)
+	VALUES ('20145696577', '7', '2019-06-22', 'D', '5000');
+
+-- OUTRA CONTA
+INSERT INTO public.movdebcred(
+	numconta, dig, data, debcred, valor)
+	VALUES ('45625779111', '9', '2019-06-22', 'C', '18500');
