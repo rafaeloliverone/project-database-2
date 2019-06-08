@@ -1,16 +1,19 @@
-DO $$
+CREATE OR REPLACE FUNCTION sumarizadaMovDebCred(mes text, ano text) 
+	RETURNS SETOF DebCred
+AS $$
 DECLARE
 	cursorMovDebCred NO SCROLL CURSOR (mes text, ano text)
 	FOR SELECT NumConta, DebCred, Valor FROM MovDebCred
 		WHERE data::text LIKE ano || '-' || mes|| '%' 
 		ORDER BY NumConta;
 	rec RECORD;
+	var_mes text := mes || ano;
 	account text := null;
 	somaCred int := 0;
 	somaDeb int := 0;
 	total int := 0;
 BEGIN
-	OPEN cursorMovDebCred('06','2019');
+	OPEN cursorMovDebCred(mes, ano);
 	LOOP
 		FETCH cursorMovDebCred INTO rec;
 		
@@ -36,10 +39,10 @@ BEGIN
 				END IF;
 			
 			ELSIF (rec.NumConta is null) THEN 
-				RAISE NOTICE '(%) % || % || % ||', account, somaCred, somaDeb, total;
+				RETURN NEXT (account, var_mes, somaCred, somaDeb)::Debcred ;
 			
 			ELSE 
-				RAISE NOTICE '(%) % || % || % ||', account, somaCred, somaDeb, total;
+				RETURN NEXT (account, var_mes,somaCred, somaDeb)::Debcred ;
 				somaCred := 0;
 				somaDeb := 0;
 				total := 0;
@@ -58,5 +61,8 @@ BEGIN
 	EXIT WHEN NOT FOUND ;
 	END LOOP;
 	CLOSE cursorMovDebCred;
-END$$;
+END;$$
+LANGUAGE plpgsql;
+
+SELECT * FROM sumarizadaMovDebCred('06','2019');
 
