@@ -9,18 +9,38 @@ BEGIN
 		LOOP
 			FETCH cursorDebCred INTO rec;
 			EXIT WHEN NOT FOUND;
+				
+				-- NumConta já está na tabela Contas
 				IF rec.NumConta IN (SELECT NumConta FROM Contas) THEN
+					
+					-- Se possuir registro na tabela DebCred
 					IF rec.NumConta IN (SELECT NumConta FROM DebCred) THEN
-						IF mesano da conta já existe ...
-						raise notice 'faltando fazer update';
+						
+						-- Se possuir registro na tabela DebCred com NumConta e mesano, fazer update
+						IF rec.NumConta::text LIKE (SELECT NumConta FROM DebCred WHERE mesano = mes||ano and numconta = rec.NumConta)::text THEN 
+							UPDATE public.debcred 
+								SET numconta=rec.NumConta, mesano=rec.mesano, credito=rec.credito, debito=rec.debito
+								WHERE numconta = rec.NumConta and mesano = rec.mesano;
+							RAISE NOTICE '(%) já possui registro na tabela dessa conta com o mês, foi feito UPDATE', rec.NumConta;
+							
+						-- Possui registro na DebCred, porém o mesano é diferente	
+						ELSE 
+							INSERT INTO public.debcred(numconta, mesano, credito, debito)
+							VALUES (rec.NumConta, rec.mesano, rec.credito, rec.debito);
+							raise notice '(%) inserindo na tabela debcred, o mês é diferente', rec.NumConta;
+						END IF;
+						
+					-- Se não possuir registro, só insere direto 	
 					ELSE 
 						INSERT INTO public.debcred(numconta, mesano, credito, debito)
 						VALUES (rec.NumConta, rec.mesano, rec.credito, rec.debito);
+						RAISE NOTICE '(%) é nova na tabela DebCred apenas insere', rec.NumConta;
 					END IF;
+					
+				-- Se NumConta não possuir registro na tabela Contas	
 				ELSE 
-					RAISE NOTICE 'Conta não cadastrada na tabela contas';
+					RAISE NOTICE '(%) não cadastrada na tabela contas', rec.NumConta;
 				END IF;
-				
 		END LOOP;
 	CLOSE cursorDebCred;
 END;$$
