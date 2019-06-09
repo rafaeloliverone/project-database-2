@@ -4,7 +4,7 @@ AS $$
 DECLARE
 	cursorMovDebCred NO SCROLL CURSOR (mes text, ano text)
 	FOR SELECT NumConta, DebCred, Valor FROM MovDebCred
-		WHERE data::text LIKE ano || '-' || mes|| '%' 
+		WHERE data::text LIKE ano || '-' || mes|| '%' AND NumConta IN (SELECT NumConta FROM Contas WHERE Ativa LIKE 'S') 
 		ORDER BY NumConta;
 	rec RECORD;
 	var_mes text := mes || ano;
@@ -65,4 +65,3 @@ END;$$
 LANGUAGE plpgsql;
 
 SELECT * FROM sumarizadaMovDebCred('06','2019');
-
