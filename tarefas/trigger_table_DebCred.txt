@@ -1,7 +1,3 @@
--- SELECT NumConta, mesano, (credito - debito) as saldo_mes FROM DebCred 
--- WHERE NumConta = '70119939401'
--- ORDER BY mesano;
-
 CREATE OR REPLACE FUNCTION tg_see_debcred() 
 RETURNS TRIGGER AS $tg_see_debcred$
 	DECLARE
@@ -10,36 +6,36 @@ RETURNS TRIGGER AS $tg_see_debcred$
 			WHERE NumConta = conta
 			ORDER BY mesano;
 		rec RECORD;
-		sum_month int := 1;
 		cont int := 0;
 		mesfaltando text[];
 		total int := 0;
-		my_year int:= 2019;
+		rec_year int:= 0;
+		rec_conta text:= null;
 	BEGIN
 		OPEN cursorDebCred('70119939401');
 		LOOP
-			EXIT WHEN NOT FOUND;
 			FETCH cursorDebCred INTO rec;
 			
-			IF (rec.mesano::text LIKE '0' || sum_month::text) THEN 
+			IF rec.mesano IN (SELECT mesano FROM DebCred WHERE NumConta = rec.NumConta ORDER BY mesano) THEN 
 				cont := cont + 1;
-				INSERT INTO public.saldos(numconta, ano, saldo)
-				VALUES (rec.NumConta, my_year, total);
+
 			ELSIF (cont = 12) THEN 
 				INSERT INTO public.saldos(numconta, ano, saldo)
-				VALUES (rec.NumConta, my_year, total);
-				RAISE NOTICE 'entrou no 12';
+				VALUES (rec_conta, rec_year, total);
+				cont := cont + 1;
+				
 			ELSE
-				INSERT INTO public.saldos(numconta, ano, saldo)
-				VALUES (rec.NumConta, my_year, total);
 				mesfaltando := array_append(mesfaltando, '0' || cont);
 			END IF;
-			sum_month := sum_month + 1; 
+			
 			total := total + rec.saldo_mes;
-
+			rec_conta := rec.Numconta;
+			rec_year := substring(rec.mesano,3)::int;
+		
+		EXIT WHEN NOT FOUND;
 		END LOOP;
 		CLOSE cursorDebCred;
-		RETURN OLD;
+		RETURN NEW;
 END; 
 $tg_see_debcred$ LANGUAGE plpgsql;
 
