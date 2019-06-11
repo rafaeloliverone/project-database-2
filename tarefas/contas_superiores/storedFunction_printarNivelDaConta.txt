@@ -2,11 +2,8 @@ CREATE OR REPLACE FUNCTION get_level_account(conta text)
 RETURNS int
 AS $$
 DECLARE
-	cont integer := 1;
-	linha RECORD;
+	cont integer := 1;		
 	x text;
-	uu text;
-
 	cont_level int := 0;
 	indices text[];
 	cont_errado text[];

@@ -4,7 +4,6 @@ AS $$
 DECLARE
 	nivel int := get_level_account(conta);
 	my_conta text := replace(conta,'.','');
-	cont int := 1;
 	formatada text;
 BEGIN
 	FOR i IN 1..6 LOOP
