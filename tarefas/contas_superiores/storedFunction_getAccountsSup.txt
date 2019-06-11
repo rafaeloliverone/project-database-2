@@ -1,0 +1,41 @@
+CREATE OR REPLACE FUNCTION get_accounts_sup(conta text)
+RETURNS SETOF text
+AS $$
+DECLARE
+	nivel int := get_level_account(conta);
+	my_conta text := replace(conta,'.','');
+	cont int := 1;
+	formatada text;
+BEGIN
+	FOR i IN 1..6 LOOP
+		IF nivel = 6 THEN 
+			formatada := substring(my_conta,1,9) || '00';
+			RETURN NEXT (formatada,'Nivel 5');
+			nivel := nivel - 1;
+ 		ELSIF nivel = 5 THEN 
+ 			formatada := substring(my_conta,1,6) || '00000';
+ 			RETURN NEXT (formatada,'Nivel 4');
+ 			nivel := nivel - 1;
+ 		ELSIF nivel = 4 THEN 
+ 			formatada := substring(my_conta,1,4) || '0000000';
+ 			RETURN NEXT (formatada,'Nivel 3');
+ 			nivel := nivel - 1;
+ 		ELSIF nivel = 3 THEN 
+ 			formatada := substring(my_conta,1,2) || '000000000';
+ 			RETURN NEXT (formatada,'Nivel 2');
+ 			nivel := nivel - 1;
+ 		ELSIF nivel = 2 THEN 
+ 			formatada := substring(my_conta,1,1) || '0000000000';
+ 			RETURN NEXT (formatada,'Nivel 1');
+ 			nivel := nivel - 1;
+		ELSE 
+			RETURN NEXT 'Todas as contas superiores já foram retornadas';
+		
+		END IF;
+	END LOOP;
+END; $$
+LANGUAGE plpgsql;
+
+
+SELECT * FROM get_accounts_sup('2.2.46.92.245.99');
+
