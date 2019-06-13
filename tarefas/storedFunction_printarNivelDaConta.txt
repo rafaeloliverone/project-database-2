@@ -1,0 +1,31 @@
+CREATE OR REPLACE FUNCTION get_level_account(conta text)
+RETURNS int
+AS $$
+DECLARE
+	cont integer := 1;
+	x text;
+	cont_level int := 0;
+	indices text[];
+	cont_errado text[];
+BEGIN
+	WHILE cont > 0 LOOP
+		 x :=  split_part(conta, '.', cont);
+		
+		IF x::int <> 0 THEN 
+			cont_level := cont_level + 1; 
+			indices := array_append(indices, cont::text);
+		
+		ELSE
+			cont_errado := array_append(cont_errado, cont::text);
+		
+		END IF;
+ 		
+		cont := cont + 1;
+
+		EXIT WHEN cont > 6;
+	END LOOP;
+	RETURN cont_level;
+END; $$
+LANGUAGE plpgsql;
+
+SELECT * from  get_level_account('1.1.11.01.11.11');
