@@ -1,0 +1,40 @@
+/*** PROCEDURE ***/
+/*** b) Implemente uma stored procedure que transporte o saldo final (dezembro/yyyy) de um ano 
+que teve seu processamento encerrado para o ano posterior. O transporte de saldo deve ser feito 
+para todas as contas do plano de contas  ***/
+
+CREATE OR REPLACE PROCEDURE transpSaldoFinal(ano text)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+	linha RECORD;
+	saldo_final numeric(11, 2) := 0;
+	total_credito numeric(11, 2) := 0;
+	total_debito numeric(11, 2) := 0;
+	mes text;
+BEGIN
+	IF EXISTS (SELECT mesano FROM debcred WHERE mesano = '12' || ano) THEN
+		FOR linha IN SELECT numconta FROM contas WHERE tipo = 'A' LOOP
+			FOR i IN 1..12 LOOP
+				CASE i
+					WHEN 1,2,3,4,5,6,7,8,9 THEN
+						mes := '0' || CAST(i AS text);
+					ELSE
+						mes := CAST(i AS text);
+				END CASE;
+				IF EXISTS (SELECT credito FROM debcred WHERE numconta = linha.numconta AND mesano = mes || ano) THEN
+					total_credito := total_credito + (SELECT credito FROM debcred WHERE numconta = linha.numconta AND mesano = mes || ano);
+				END IF;
+				IF EXISTS (SELECT debito FROM debcred WHERE numconta = linha.numconta AND mesano = mes || ano) THEN
+					total_debito := total_debito + (SELECT debito FROM debcred WHERE numconta = linha.numconta AND mesano = mes || ano);
+				END IF;
+			END LOOP;
+			saldo_final := total_credito - total_debito;
+			INSERT INTO saldos (numconta, ano, saldo) VALUES (linha.numconta, CAST(ano AS int)+1, saldo_final);
+			total_credito := 0;
+			total_debito := 0;
+		END LOOP;
+	END IF;
+END $$;
+
+CALL transpSaldoFinal('2018');

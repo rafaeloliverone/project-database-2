@@ -1,0 +1,58 @@
+/*** FUNCTION ***/
+/*** b) Criar uma função (que retorne uma tabela) que, para uma conta 
+e um mês ano passado como argumento, retorne os valores (evoluídos) ***/
+
+CREATE OR REPLACE FUNCTION valorEvoluido(conta char(11), data_mes text, data_ano text)
+RETURNS TABLE (
+	saldoanterior numeric (11, 2),
+	totalcredito numeric (11, 2),
+	totaldebito numeric (11, 2),
+	saldoatual numeric (11, 2)
+)AS $$
+DECLARE
+	saldo_ant numeric(11, 2) := 0;
+	tot_credito numeric(11, 1) := 0;
+	tot_debito numeric(11, 2) := 0;
+	saldo_atu numeric(11, 2) := 0;
+	mesaux text;
+	credito numeric(11, 2) := 0;
+	debito  numeric(11, 2) := 0;
+BEGIN
+	IF EXISTS (SELECT sal.saldo FROM saldos AS sal WHERE sal.ano = CAST(data_ano AS int) AND sal.numconta = conta) THEN
+		saldo_ant := (SELECT saldo FROM saldos WHERE ano = CAST(ano AS int) AND numconta = conta);
+	END IF;
+	IF EXISTS (SELECT d.credito FROM debcred AS d WHERE d.numconta = conta AND d.mesano = data_mes || data_ano) THEN
+		tot_credito := (SELECT d.credito FROM debcred AS d WHERE d.numconta = conta AND d.mesano = data_mes || data_ano);
+	END IF;
+	IF EXISTS (SELECT d.debito FROM debcred AS d WHERE d.numconta = conta AND d.mesano = data_mes || data_ano) THEN
+		tot_debito := (SELECT d.debito FROM debcred AS d WHERE d.numconta = conta AND d.mesano = data_mes || data_ano);
+	END IF;
+	IF CAST(data_mes AS int) > 1 THEN
+		FOR i IN 1..CAST(data_mes AS int)-1 LOOP
+			CASE i
+				WHEN 1,2,3,4,5,6,7,8,9 THEN
+					mesaux := '0' || CAST(i AS text);
+				ELSE
+					mesaux := CAST(i AS text);
+			END CASE;
+			IF EXISTS (SELECT d.credito FROM debcred AS d WHERE d.numconta = conta AND d.mesano = mesaux || data_ano) THEN
+				credito := (SELECT d.credito FROM debcred AS d WHERE d.numconta = conta AND d.mesano = mesaux || data_ano);
+			END IF;
+			IF EXISTS (SELECT d.debito FROM debcred AS d WHERE d.numconta = conta AND d.mesano = mesaux || data_ano) THEN
+				debito := (SELECT d.debito FROM debcred AS d WHERE d.numconta = conta AND d.mesano = mesaux || data_ano);
+			END IF;
+			saldo_ant := saldo_ant + credito - debito;
+			credito := 0;
+			debito := 0;
+		END LOOP;
+	END IF;
+	saldo_atu := saldo_ant + tot_credito - tot_debito;
+	saldoanterior := saldo_ant;
+	totalcredito := tot_credito;
+	totaldebito := tot_debito;
+	saldoatual := saldo_atu;
+	RETURN NEXT;
+END; $$
+LANGUAGE plpgsql;
+
+SELECT * FROM valorEvoluido('11010100100', '03', '2019');

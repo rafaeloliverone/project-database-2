@@ -1,0 +1,159 @@
+/*** FUNCÃO PARA DESCOBRIR NÍVEL DA CONTA ***/
+CREATE OR REPLACE FUNCTION nivelConta(conta char(11))
+RETURNS INTEGER AS $$
+DECLARE
+	acc_lvl int := 6;
+BEGIN
+	IF substring(conta from 10 for 11) = '00' THEN
+		acc_lvl := 5;
+		IF substring(conta from 7 for 3) = '000' THEN
+			acc_lvl := 4;
+			IF substring(conta from 5 for 2) = '00' THEN
+				acc_lvl := 3;
+				IF substring(conta from 3 for 2) = '00' THEN
+					acc_lvl := 2;
+					IF substring(conta from 2 for 1) = '0' THEN
+						acc_lvl := 1;
+					END IF;
+				END IF;
+			END IF;
+		END IF;
+	END IF;
+	RETURN acc_lvl;
+END; $$
+LANGUAGE plpgsql;
+														 
+SELECT nivelConta('11010100000');
+
+
+/*** FUNCÃO PARA DESCOBRIR AS CONTAS SUPERIORES DE UMA DETERMINADA CONTA ***/
+CREATE OR REPLACE FUNCTION contaSuperior(conta char(11))
+RETURNS char(11)[] AS $$													
+DECLARE
+	nivel integer := (SELECT nivelConta(conta));
+	contasSuperiores char(11)[];
+	conta_1 char(11);
+	conta_2 char(11);
+	conta_3 char(11);
+	conta_4 char(11);
+	conta_5 char(11);												
+BEGIN
+	IF nivel = 6 THEN
+		conta_1 := rpad(substring(conta from 1 for 1), 11, '0');
+		conta_2 := rpad(substring(conta from 1 for 2), 11, '0');
+		conta_3 := rpad(substring(conta from 1 for 4), 11, '0');
+		conta_4 := rpad(substring(conta from 1 for 6), 11, '0');
+		conta_5 := rpad(substring(conta from 1 for 9), 11, '0');
+		contasSuperiores := array_append(contasSuperiores, conta_1);
+		contasSuperiores := array_append(contasSuperiores, conta_2);
+		contasSuperiores := array_append(contasSuperiores, conta_3);
+		contasSuperiores := array_append(contasSuperiores, conta_4);
+		contasSuperiores := array_append(contasSuperiores, conta_5);
+	ELSIF nivel = 5 THEN
+		conta_1 := rpad(substring(conta from 1 for 1), 11, '0');
+		conta_2 := rpad(substring(conta from 1 for 2), 11, '0');
+		conta_3 := rpad(substring(conta from 1 for 4), 11, '0');
+		conta_4 := rpad(substring(conta from 1 for 6), 11, '0');
+		contasSuperiores := array_append(contasSuperiores, conta_1);
+		contasSuperiores := array_append(contasSuperiores, conta_2);
+		contasSuperiores := array_append(contasSuperiores, conta_3);
+		contasSuperiores := array_append(contasSuperiores, conta_4);
+	ELSIF nivel = 4 THEN
+		conta_1 := rpad(substring(conta from 1 for 1), 11, '0');
+		conta_2 := rpad(substring(conta from 1 for 2), 11, '0');
+		conta_3 := rpad(substring(conta from 1 for 4), 11, '0');
+		contasSuperiores := array_append(contasSuperiores, conta_1);
+		contasSuperiores := array_append(contasSuperiores, conta_2);
+		contasSuperiores := array_append(contasSuperiores, conta_3);
+	ELSIF nivel = 3 THEN
+		conta_1 := rpad(substring(conta from 1 for 1), 11, '0');
+		conta_2 := rpad(substring(conta from 1 for 2), 11, '0');
+		contasSuperiores := array_append(contasSuperiores, conta_1);
+		contasSuperiores := array_append(contasSuperiores, conta_2);
+	ELSIF nivel = 2 THEN
+		conta_1 := rpad(substring(conta from 1 for 1), 11, '0');
+		contasSuperiores := array_append(contasSuperiores, conta_1);
+	END IF;
+	RETURN contasSuperiores;
+END; $$
+LANGUAGE plpgsql;						  
+
+SELECT contaSuperior('11010100000');
+
+
+/*** TRIGGER ***/
+/*** a) Criar um trigger na tabela conta que só permita adicionar uma nova conta 
+se todas as suas contas superiores já estiverem na tabela. ***/
+
+CREATE OR REPLACE FUNCTION checkConta()
+RETURNS TRIGGER AS $$
+DECLARE
+	nivel integer := (SELECT nivelConta(NEW.numconta));
+	contasSuperiores char(11)[] := (SELECT contaSuperior(NEW.numconta));									   
+BEGIN
+	IF (TG_OP='INSERT') THEN
+		IF nivel = 6 THEN
+			IF NOT EXISTS (SELECT numconta FROM Contas WHERE numconta = contasSuperiores[1]) THEN
+				RAISE EXCEPTION 'Conta não pode ser inserida'																						 
+				USING HINT = 'Insira as contas superiores primeiro';
+			ELSIF NOT EXISTS (SELECT numconta FROM Contas WHERE numconta = contasSuperiores[2]) THEN
+				RAISE EXCEPTION 'Conta não pode ser inserida'																							
+				USING HINT = 'Insira as contas superiores primeiro';
+			ELSIF NOT EXISTS (SELECT numconta FROM Contas WHERE numconta = contasSuperiores[3]) THEN
+				RAISE EXCEPTION 'Conta não pode ser inserida'																							
+				USING HINT = 'Insira as contas superiores primeiro';
+			ELSIF NOT EXISTS (SELECT numconta FROM Contas WHERE numconta = contasSuperiores[4]) THEN
+				RAISE EXCEPTION 'Conta não pode ser inserida'																							
+				USING HINT = 'Insira as contas superiores primeiro';
+			ELSIF NOT EXISTS (SELECT numconta FROM Contas WHERE numconta = contasSuperiores[5]) THEN
+				RAISE EXCEPTION 'Conta não pode ser inserida'																							
+				USING HINT = 'Insira as contas superiores primeiro';
+			END IF;
+		ELSIF nivel = 5 THEN	
+			IF NOT EXISTS (SELECT numconta FROM Contas WHERE numconta = contasSuperiores[1]) THEN
+				RAISE EXCEPTION 'Conta não pode ser inserida'																						 
+				USING HINT = 'Insira as contas superiores primeiro';
+			ELSIF NOT EXISTS (SELECT numconta FROM Contas WHERE numconta = contasSuperiores[2]) THEN
+				RAISE EXCEPTION 'Conta não pode ser inserida'																							
+				USING HINT = 'Insira as contas superiores primeiro';
+			ELSIF NOT EXISTS (SELECT numconta FROM Contas WHERE numconta = contasSuperiores[3]) THEN
+				RAISE EXCEPTION 'Conta não pode ser inserida'																							
+				USING HINT = 'Insira as contas superiores primeiro';
+			ELSIF NOT EXISTS (SELECT numconta FROM Contas WHERE numconta = contasSuperiores[4]) THEN
+				RAISE EXCEPTION 'Conta não pode ser inserida'																							
+				USING HINT = 'Insira as contas superiores primeiro';
+			END IF;
+		ELSIF nivel = 4 THEN	
+			IF NOT EXISTS (SELECT numconta FROM Contas WHERE numconta = contasSuperiores[1]) THEN
+				RAISE EXCEPTION 'Conta não pode ser inserida'																						 
+				USING HINT = 'Insira as contas superiores primeiro';
+			ELSIF NOT EXISTS (SELECT numconta FROM Contas WHERE numconta = contasSuperiores[2]) THEN
+				RAISE EXCEPTION 'Conta não pode ser inserida'																							
+				USING HINT = 'Insira as contas superiores primeiro';
+			ELSIF NOT EXISTS (SELECT numconta FROM Contas WHERE numconta = contasSuperiores[3]) THEN
+				RAISE EXCEPTION 'Conta não pode ser inserida'																							
+				USING HINT = 'Insira as contas superiores primeiro';
+			END IF;
+		ELSIF nivel = 3 THEN	
+			IF NOT EXISTS (SELECT numconta FROM Contas WHERE numconta = contasSuperiores[1]) THEN
+				RAISE EXCEPTION 'Conta não pode ser inserida'																						 
+				USING HINT = 'Insira as contas superiores primeiro';
+			ELSIF NOT EXISTS (SELECT numconta FROM Contas WHERE numconta = contasSuperiores[2]) THEN
+				RAISE EXCEPTION 'Conta não pode ser inserida'																							
+				USING HINT = 'Insira as contas superiores primeiro';
+			END IF;
+		ELSIF nivel = 2 THEN	
+			IF NOT EXISTS (SELECT numconta FROM Contas WHERE numconta = contasSuperiores[1]) THEN
+				RAISE EXCEPTION 'Conta não pode ser inserida'																						 
+				USING HINT = 'Insira as contas superiores primeiro';
+			END IF;																					  
+		END IF;									   
+	END IF;
+	RETURN NEW;																			   
+END; $$
+LANGUAGE plpgsql;
+																			   
+CREATE TRIGGER tgcheckConta
+BEFORE INSERT ON Contas
+FOR EACH ROW
+EXECUTE PROCEDURE checkConta();
