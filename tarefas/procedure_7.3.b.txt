@@ -13,7 +13,7 @@ DECLARE
 	total_debito numeric(11, 2) := 0;
 	mes text;
 BEGIN
-	IF CAST(ano AS int)+1 <> date_part('year', current_date) THEN
+	IF CAST(ano AS int)+1 <> CAST(date_part('year', current_date) AS int) THEN
 		IF EXISTS (SELECT mesano FROM debcred WHERE mesano = '12' || ano) THEN
 			FOR linha IN SELECT numconta FROM contas WHERE tipo = 'A' LOOP
 				FOR i IN 1..12 LOOP
