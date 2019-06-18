@@ -1,15 +1,18 @@
 CREATE OR REPLACE PROCEDURE insertDebCred(mes text, ano text)
 AS $$
 DECLARE
-	cursorDebCred NO SCROLL CURSOR
+	cursorDebCred2 NO SCROLL CURSOR
 	FOR SELECT * FROM sumarizadaMovDebCred(mes,ano);
 	rec RECORD;
+	contasSuperiores char(11)[];
+	incremento text := 'a';
+	nivel int;
 BEGIN 
-	OPEN cursorDebCred;
+	OPEN cursorDebCred2;
 		LOOP
-			FETCH cursorDebCred INTO rec;
+			FETCH cursorDebCred2 INTO rec;
 			EXIT WHEN NOT FOUND;
-				
+			
 				-- NumConta já está na tabela Contas
 				IF rec.NumConta IN (SELECT NumConta FROM Contas) THEN
 					
@@ -23,11 +26,78 @@ BEGIN
 								WHERE numconta = rec.NumConta and mesano = rec.mesano;
 							RAISE NOTICE '(%) já possui registro na tabela dessa conta com o mês, foi feito UPDATE', rec.NumConta;
 							
+							nivel := (select nivelConta(rec.NumConta));	
+							contasSuperiores := (SELECT contaSuperior(rec.NumConta));
+							
+							FOR i IN 1..nivel-1 LOOP
+							IF contasSuperiores[i] IN (SELECT NumConta FROM Contas) AND contasSuperiores[i] IN (SELECT NumConta FROM DebCred) THEN
+-- 								INSERT INTO public.debcred(numconta, mesano, credito, debito)
+-- 										VALUES (contasSuperiores[i], rec.mesano, rec.credito, rec.debito);
+								UPDATE public.debcred 
+								SET numconta=contasSuperiores[i], mesano=rec.mesano, credito= rec.credito, debito= rec.debito
+								WHERE numconta = contasSuperiores[i] and mesano = rec.mesano;
+										raise notice '%','INSERINDO DIRETO NO LOOP';
+							
+							ELSIF contasSuperiores[i] IN (SELECT NumConta FROM Contas) THEN 
+								INSERT INTO public.debcred(numconta, mesano, credito, debito)
+ 										VALUES (contasSuperiores[i], rec.mesano, rec.credito, rec.debito);
+										
+							ELSIF contasSuperiores[i] IN (SELECT NumConta FROM DebCred) THEN 
+								INSERT INTO public.contas(
+									numconta, dig, nome, tipo, ativa)
+									VALUES (contasSuperiores[i], gerarDigito(contasSuperiores[i]), incremento, 'S', 'S');		
+
+							ELSE 
+								INSERT INTO public.contas(
+									numconta, dig, nome, tipo, ativa)
+									VALUES (contasSuperiores[i], gerarDigito(contasSuperiores[i]), incremento, 'S', 'S');
+									
+								INSERT INTO public.debcred(numconta, mesano, credito, debito)
+										VALUES (contasSuperiores[i], rec.mesano, rec.credito, rec.debito);
+										
+							END IF;
+						END LOOP;
+							
+							
+							
 						-- Possui registro na DebCred, porém o mesano é diferente	
 						ELSE 
 							INSERT INTO public.debcred(numconta, mesano, credito, debito)
 							VALUES (rec.NumConta, rec.mesano, rec.credito, rec.debito);
 							raise notice '(%) inserindo na tabela debcred, o mês é diferente', rec.NumConta;
+							
+							nivel := (select nivelConta(rec.NumConta));	
+							contasSuperiores := (SELECT contaSuperior(rec.NumConta));
+							
+							FOR i IN 1..nivel-1 LOOP
+							IF contasSuperiores[i] IN (SELECT NumConta FROM Contas) AND contasSuperiores[i] IN (SELECT NumConta FROM DebCred) THEN
+-- 								INSERT INTO public.debcred(numconta, mesano, credito, debito)
+-- 										VALUES (contasSuperiores[i], rec.mesano, rec.credito, rec.debito);
+								UPDATE public.debcred 
+								SET numconta=contasSuperiores[i], mesano=rec.mesano, credito= rec.credito, debito= rec.debito
+								WHERE numconta = contasSuperiores[i] and mesano = rec.mesano;
+										raise notice '%','INSERINDO DIRETO NO LOOP';
+							
+							ELSIF contasSuperiores[i] IN (SELECT NumConta FROM Contas) THEN 
+								INSERT INTO public.debcred(numconta, mesano, credito, debito)
+ 										VALUES (contasSuperiores[i], rec.mesano, rec.credito, rec.debito);
+										
+							ELSIF contasSuperiores[i] IN (SELECT NumConta FROM DebCred) THEN 
+								INSERT INTO public.contas(
+									numconta, dig, nome, tipo, ativa)
+									VALUES (contasSuperiores[i], gerarDigito(contasSuperiores[i]), incremento, 'S', 'S');		
+
+							ELSE 
+								INSERT INTO public.contas(
+									numconta, dig, nome, tipo, ativa)
+									VALUES (contasSuperiores[i], gerarDigito(contasSuperiores[i]), incremento, 'S', 'S');
+									
+								INSERT INTO public.debcred(numconta, mesano, credito, debito)
+										VALUES (contasSuperiores[i], rec.mesano, rec.credito, rec.debito);
+										
+							END IF;
+						END LOOP;
+							
 						END IF;
 						
 					-- Se não possuir registro, só insere direto 	
@@ -35,15 +105,50 @@ BEGIN
 						INSERT INTO public.debcred(numconta, mesano, credito, debito)
 						VALUES (rec.NumConta, rec.mesano, rec.credito, rec.debito);
 						RAISE NOTICE '(%) é nova na tabela DebCred apenas insere', rec.NumConta;
+						
+						nivel := (select nivelConta(rec.NumConta));	
+						contasSuperiores := (SELECT contaSuperior(rec.NumConta));
+						
+						FOR i IN 1..nivel-1 LOOP
+							IF contasSuperiores[i] IN (SELECT NumConta FROM Contas) AND contasSuperiores[i] IN (SELECT NumConta FROM DebCred) THEN
+-- 								INSERT INTO public.debcred(numconta, mesano, credito, debito)
+-- 										VALUES (contasSuperiores[i], rec.mesano, rec.credito, rec.debito);
+								UPDATE public.debcred 
+								SET numconta=contasSuperiores[i], mesano=rec.mesano, credito= rec.credito, debito= rec.debito
+								WHERE numconta = contasSuperiores[i] and mesano = rec.mesano;
+										raise notice '%','INSERINDO DIRETO NO LOOP';
+							
+							ELSIF contasSuperiores[i] IN (SELECT NumConta FROM Contas) THEN 
+								INSERT INTO public.debcred(numconta, mesano, credito, debito)
+ 										VALUES (contasSuperiores[i], rec.mesano, rec.credito, rec.debito);
+										
+							ELSIF contasSuperiores[i] IN (SELECT NumConta FROM DebCred) THEN 
+								INSERT INTO public.contas(
+									numconta, dig, nome, tipo, ativa)
+									VALUES (contasSuperiores[i], gerarDigito(contasSuperiores[i]), incremento, 'S', 'S');		
+
+							ELSE 
+								INSERT INTO public.contas(
+									numconta, dig, nome, tipo, ativa)
+									VALUES (contasSuperiores[i], gerarDigito(contasSuperiores[i]), incremento, 'S', 'S');
+									
+								INSERT INTO public.debcred(numconta, mesano, credito, debito)
+										VALUES (contasSuperiores[i], rec.mesano, rec.credito, rec.debito);
+										
+							END IF;
+						END LOOP;
+							
 					END IF;
+	
 					
 				-- Se NumConta não possuir registro na tabela Contas	
 				ELSE 
 					RAISE NOTICE '(%) não cadastrada na tabela contas', rec.NumConta;
 				END IF;
 		END LOOP;
-	CLOSE cursorDebCred;
+	CLOSE cursorDebCred2;
 END;$$
 LANGUAGE plpgsql;
 
 CALL insertDebCred('06','2019');
+
