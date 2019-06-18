@@ -13,27 +13,29 @@ DECLARE
 	total_debito numeric(11, 2) := 0;
 	mes text;
 BEGIN
-	IF EXISTS (SELECT mesano FROM debcred WHERE mesano = '12' || ano) THEN
-		FOR linha IN SELECT numconta FROM contas WHERE tipo = 'A' LOOP
-			FOR i IN 1..12 LOOP
-				CASE i
-					WHEN 1,2,3,4,5,6,7,8,9 THEN
-						mes := '0' || CAST(i AS text);
-					ELSE
-						mes := CAST(i AS text);
-				END CASE;
-				IF EXISTS (SELECT credito FROM debcred WHERE numconta = linha.numconta AND mesano = mes || ano) THEN
-					total_credito := total_credito + (SELECT credito FROM debcred WHERE numconta = linha.numconta AND mesano = mes || ano);
-				END IF;
-				IF EXISTS (SELECT debito FROM debcred WHERE numconta = linha.numconta AND mesano = mes || ano) THEN
-					total_debito := total_debito + (SELECT debito FROM debcred WHERE numconta = linha.numconta AND mesano = mes || ano);
-				END IF;
+	IF CAST(ano AS int)+1 <> date_part('year', current_date) THEN
+		IF EXISTS (SELECT mesano FROM debcred WHERE mesano = '12' || ano) THEN
+			FOR linha IN SELECT numconta FROM contas WHERE tipo = 'A' LOOP
+				FOR i IN 1..12 LOOP
+					CASE i
+						WHEN 1,2,3,4,5,6,7,8,9 THEN
+							mes := '0' || CAST(i AS text);
+						ELSE
+							mes := CAST(i AS text);
+					END CASE;
+					IF EXISTS (SELECT credito FROM debcred WHERE numconta = linha.numconta AND mesano = mes || ano) THEN
+						total_credito := total_credito + (SELECT credito FROM debcred WHERE numconta = linha.numconta AND mesano = mes || ano);
+					END IF;
+					IF EXISTS (SELECT debito FROM debcred WHERE numconta = linha.numconta AND mesano = mes || ano) THEN
+						total_debito := total_debito + (SELECT debito FROM debcred WHERE numconta = linha.numconta AND mesano = mes || ano);
+					END IF;
+				END LOOP;
+				saldo_final := total_credito - total_debito;
+				INSERT INTO saldos (numconta, ano, saldo) VALUES (linha.numconta, CAST(ano AS int)+1, saldo_final);
+				total_credito := 0;
+				total_debito := 0;
 			END LOOP;
-			saldo_final := total_credito - total_debito;
-			INSERT INTO saldos (numconta, ano, saldo) VALUES (linha.numconta, CAST(ano AS int)+1, saldo_final);
-			total_credito := 0;
-			total_debito := 0;
-		END LOOP;
+		END IF;
 	END IF;
 END $$;
 
