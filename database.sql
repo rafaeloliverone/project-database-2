@@ -14,7 +14,7 @@ CREATE TABLE Contas
 	CONSTRAINT CK_contas_ativa    CHECK (ativa SIMILAR TO '[S|N]')
 );
 
-/*** Criação da tabela Saldos ***/
+/*** Criacao da tabela Saldos ***/
 CREATE TABLE Saldos
 (
 	numconta char(11)           NOT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE Saldos
 	CONSTRAINT PK_saldos        PRIMARY KEY (ano, numconta)
 );
 
-/*** Criação da tabela DebCred ***/
+/*** Criacao da tabela DebCred ***/
 CREATE TABLE DebCred
 (
 	numconta char(11)             NOT NULL,
@@ -38,7 +38,7 @@ CREATE TABLE DebCred
 	CONSTRAINT PK_debcred         PRIMARY KEY (mesano, numconta)
 );
 
-/*** Criação da tabela MovDebCred ***/
+/*** Cricao da tabela MovDebCred ***/
 CREATE TABLE MovDebCred
 (
 	numconta char(11)                NOT NULL,
